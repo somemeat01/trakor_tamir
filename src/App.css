@@ -36,3 +36,22 @@
     transform: rotate(360deg);
   }
 }
+
+.blur {
+  background-color: rgba(255, 255, 255, 0.4);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+}
+
+.btn{
+  width:100%;
+background-color:white;
+color: black;
+  border-radius:5px;
+  padding:5px;
+}
+.btn-hover:hover{
+  background-color:black;
+  color:white;
+  transition: transform 1s ease-in-out;
+}
