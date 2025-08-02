@@ -8,9 +8,10 @@ import ForgotPassword from './componen/ForgotPassword'
 import AuthLayout from './page/AuthLayout'
 import { AuthProvider } from './componen/AuthContext';
 import Home from './componen/Home'
+import Tamir from './componen/Tamir'
 import {BrowserRouter as Router , Route , Routes} from "react-router-dom";
 function App() {
-  
+  console.log("App.js rendering...");
   return (
    <div>
     <AuthProvider>
@@ -23,7 +24,7 @@ function App() {
         <Route path='/Kayıt' element={<Register/>}/>
         <Route path='/Giriş' element={<Login />}/>
         <Route path='/ForgotPassword' element={<ForgotPassword/>}/>
-
+        <Route path='/Tamir' element={<Tamir />}/>
        
 
         <Route path='/' element={<AuthLayout/>}>

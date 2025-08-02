@@ -1,204 +1,124 @@
-import React, { Component } from "react";
+import React from "react";
 import oktay from "../resim/oktay.jpg";
 import necati from "../resim/necati.jpg";
 import osman from "../resim/osman.jpg";
-// style={{ backgroundColor:'black'}}
-export default class Hakkında extends Component {
-  render() {
-    return (
-      <div
-        style={{
-          backgroundColor: "rgba(222,222,222,.5)",
-          justifyContent: "center",
-          display: "flex",
-          flexDirection: "row",
-          alignItems: "center",
-          gap:"20px",
-          height: "90vh",
-          width: "100%",
-          paddingLeft: "10rem",
-          paddingRight: "10rem",
-        }}
-      >
-        <div
-          style={{
-            width: "30%",
-            height: "50%",
-            borderRadius: "1rem",
-            backgroundColor: "black",
-            justifyContent: "center",
-            alignItems:"center",
-            display: "flex",
-            flexDirection: "column",
-            position: "relative",
-            boxShadow: "0 10px 10px rgba(0,0,0,.5)",
-            color:"white",
-            padding:"1rem",
-            textAlign:"center"
-          }}
-        >
-          <img
-            src={oktay}
-            style={{
-              width: "9rem",
-              height: "9rem",
-              borderRadius: "50%",
-              position: "absolute",
-              top: "-4rem",
-              left: "5.75rem",
-            }}
-          />
-          <div style={{
-            display:"flex",
-            flexDirection:"column",
-            
-            
-          }}>
-            <h1 style={{fontSize:"1.5rem", color:"white"}}>Oktay ALAT</h1>
-           <p>
-            Oktay Bey tarım ürünleri imalatı ve ithalatı yapmaktadır
-           </p>
-            <div style={{
-              display:"flex",
-              flexDirection:"row",
-              justifyContent:"space-between",
-              width:"100%",
-              height:"5rem",
-              backgroundColor:"black",
-              color:"white",
-              alignItems:"center",
-              fontSize:"1rem",
-            }}>
+import arkaPlan from "../resim/kp.jpg";
+import "slick-carousel/slick/slick.css";
+import "slick-carousel/slick/slick-theme.css";
+import Slider from "react-slick";
 
-             <div styşe={{width:"50%",
-              borderWidth:"1px"}}>0556 218 7438</div>
-            <button>Tıkla</button>
-            </div>
-            
-            <div className="social-media"  style={{
-              display:"flex",
-              flexDirection:"column",
-              justifyContent:"center"}}>
-              <div className="facebook" >
-                <a href="#" ><i className="fa-brands fa-facebook"></i></a>
+const profiles = [
+  {
+    name: "Oktay ALAT",
+    img: oktay,
+    description: "Oktay Bey tarım ürünleri imalatı ve ithalatı yapmaktadır",
+    phone: "0556 218 7438",
+    instagram: "https://instagram.com/some_meat1",
+    facebook: "#",
+  },
+  {
+    name: "Necati Can ALAT",
+    img: necati,
+    description: "Oktay Bey tarım ürünleri imalatı ve ithalatı yapmaktadır",
+    phone: "0556 218 7438",
+    instagram: "https://instagram.com/some_meat1",
+    facebook: "#",
+  },
+  {
+    name: "Oktay ALAT",
+    img: osman,
+    description: "Oktay Bey tarım ürünleri imalatı ve ithalatı yapmaktadır",
+    phone: "0556 218 7438",
+    instagram: "https://instagram.com/some_meat1",
+    facebook: "#",
+  },
+];
+
+const Hakkında = () => {
+  const settings = {
+    dots: true,
+    infinite: true,
+    speed: 500,
+    slidesToShow: 1,
+    slidesToScroll: 1,
+    autoplay: true,
+    autoplaySpeed: 5000,
+  };
+
+  return (
+    <div
+      style={{
+        backgroundImage: `linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.1)), url(${arkaPlan})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        padding: "4rem 2rem",
+        minHeight: "90vh",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+      }}
+    >
+      <div style={{ width: "80%" }}>
+        <Slider {...settings}>
+          {profiles.map((person, index) => (
+            <div key={index}>
+              <div
+                style={{
+                  maxWidth: "650px",
+                  width: "90%",
+                  margin: "0 auto",
+                  backgroundColor: "#000",
+                  color: "#fff",
+                  borderRadius: "1rem",
+                  boxShadow: "0 10px 20px rgba(0,0,0,0.4)",
+                  padding: "2rem",
+                  textAlign: "center",
+                  position: "relative",
+                }}
+              >
+                <img
+                  src={person.img}
+                  alt={person.name}
+                  style={{
+                    width: "9rem",
+                    height: "9rem",
+                    borderRadius: "50%",
+                    objectFit: "cover",
+                    border: "4px solid white",
+                    marginBottom: "1rem",
+                  }}
+                />
+                <h2>{person.name}</h2>
+                <p style={{ margin: "1rem 0" }}>{person.description}</p>
+                <p>{person.phone}</p>
+                <button
+                  style={{
+                    marginTop: "1rem",
+                    padding: "0.5rem 1.5rem",
+                    backgroundColor: "white",
+                    color: "black",
+                    borderRadius: "5px",
+                    border: "none",
+                    cursor: "pointer",
+                  }}
+                >
+                  Tıkla
+                </button>
+                <div style={{ marginTop: "1rem", fontSize: "1.5rem" }}>
+                  <a href={person.facebook} target="_blank" rel="noreferrer" style={{ marginRight: "1rem", color: "#1877F2" }}>
+                    <i className="fa-brands fa-facebook"></i>
+                  </a>
+                  <a href={person.instagram} target="_blank" rel="noreferrer" style={{ color: "#E4405F" }}>
+                    <i className="fa-brands fa-instagram"></i>
+                  </a>
+                </div>
               </div>
-              <div className="instagram" >
-                <a href="https://instagram.com/some_meat1" target="_blank" ><i className="fa-brands fa-instagram"></i></a>
-              </div>
             </div>
-            
-            
-            </div>
-          </div>
-        <div
-          style={{
-            width: "30%",
-            height: "50%",
-            borderRadius: "1rem",
-            backgroundColor: "black",
-            justifyContent: "center",
-            alignItems:"center",
-            display: "flex",
-            flexDirection: "column",
-            position: "relative",
-            boxShadow: "0 10px 10px rgba(0,0,0,.5)",
-            color:"white",
-            padding:"1rem",
-            textAlign:"center"
-          }}
-        >
-          <img
-            src={necati}
-            style={{
-              width: "9rem",
-              height: "9rem",
-              borderRadius: "50%",
-              position: "absolute",
-              top: "-4rem",
-              left: "5.75rem",
-            }}
-          />
-          <div style={{
-            display:"flex",
-            flexDirection:"column",
-            
-            
-          }}>
-            <h1 style={{fontSize:"1.5rem", color:"white"}}>necati can alat</h1>
-           <p>
-            Oktay Bey tarım ürünleri imalatı ve ithalatı yapmaktadır
-           </p>
-            <div style={{
-              display:"flex",
-              flexDirection:"row",
-              justifyContent:"space-between",
-              width:"100%",
-              height:"5rem",
-              backgroundColor:"black",
-              color:"white",
-              alignItems:"center",
-              fontSize:"1rem",
-            }}>
-              <div style={{width:"50%",borderWidth:"1px"}}>0556 218 7438</div>
-            <button>Tıkla</button>
-            </div>
-          </div>
-        </div>
-        <div
-          style={{
-            width: "30%",
-            height: "50%",
-            borderRadius: "1rem",
-            backgroundColor: "black",
-            justifyContent: "center",
-            alignItems:"center",
-            display: "flex",
-            flexDirection: "column",
-            position: "relative",
-            boxShadow: "0 10px 10px rgba(0,0,0,.5)",
-            color:"white",
-            padding:"1rem",
-            textAlign:"center"
-          }}
-        >
-          <img
-            src={osman}
-            style={{
-              width: "9rem",
-              height: "9rem",
-              borderRadius: "50%",
-              position: "absolute",
-              top: "-4rem",
-              left: "5.75rem",
-            }}
-          />
-          <div style={{
-            display:"flex",
-            flexDirection:"column",
-            
-            
-          }}>
-            <h1 style={{fontSize:"1.5rem", color:"white"}}>Oktay ALAT</h1>
-           <p>
-            Oktay Bey tarım ürünleri imalatı ve ithalatı yapmaktadır
-           </p>
-            <div style={{
-              display:"flex",
-              flexDirection:"row",
-              justifyContent:"space-between",
-              width:"100%",
-              height:"5rem",
-              backgroundColor:"black",
-              color:"white",
-              alignItems:"center",
-              fontSize:"1rem",
-            }}>
-              <div style={{width:"50%",borderWidth:"1px"}}>0556 218 7438</div>
-            <button>Tıkla</button>
-            </div>
-          </div>
-        </div>
+          ))}
+        </Slider>
       </div>
-    );
-  }
-}
+    </div>
+  );
+};
+
+export default Hakkında;

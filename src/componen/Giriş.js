@@ -1,42 +1,53 @@
-import React from 'react'
-import { useState, useCallback } from 'react'
-import { signInWithEmailAndPassword } from 'firebase/auth'
-import { auth } from '../firebase'
-import { Link } from 'react-router-dom'
-import BizeKatıl from '../componen/BizeKatıl'
-import bag from "../resim/bağ.jpg"
-import "../App.css"
-import { useAuth } from '../componen/AuthContext'
+import React, { useState, useCallback } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../componen/AuthContext';
+import bag from "../resim/bağ.jpg";
+import "../App.css";
 
 const Giriş = () => {
-    const [email, setEmail] = useState("");
-    const [şifre, setŞifre] = useState("");
-    const {setEmail: setGlobalEmail } = useAuth();
-    const [loggedIn, setLoggedIn] = useState(false);
+    // navigate hook'u ile yönlendirme yapacağız
+    const navigate = useNavigate();
 
-    const handleSubmit = useCallback((e) => {
+    // useAuth hook'undan login fonksiyonunu alıyoruz.
+    // Artık global email state'i yönetmeye gerek yok, çünkü AuthContext Firebase'den gelen kullanıcıyı otomatik olarak dinleyecek.
+    const { login } = useAuth();
+
+    // Lokal state'lerimizi koruyoruz
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState(""); // Şifre için ş harfi olmadan 'password' kullanmak daha yaygındır
+    
+    // Hata mesajı için bir state ekleyebiliriz
+    const [error, setError] = useState(null);
+
+    const handleSubmit = useCallback(async (e) => {
         e.preventDefault();
-        if (!email || !şifre) {
+        
+        setError(null); // Önceki hataları temizle
+
+        if (!email || !password) {
             alert("Lütfen tüm alanları doldurun");
             return;
         }
 
-        signInWithEmailAndPassword(auth, email, şifre)
-            .then(() => {
-                alert("Giriş yapıldı");
-                setGlobalEmail(email);  // Global duruma email'i kaydedin
-                setLoggedIn(true);
-            })
-            .catch((e) => {
-                console.error(e);
-                alert("Giriş yaparken bir hata oluştu. Lütfen tekrar deneyin.");
-            });
-    }, [email, şifre, setGlobalEmail]);
+        try {
+            // useAuth'tan gelen login fonksiyonunu çağırıyoruz
+            await login(email, password);
+            
+            // Giriş başarılı olursa, /BizeKatıl sayfasına yönlendiriyoruz
+            // AuthContext.js artık currentUser'ı otomatik olarak güncellediği için BizeKatıl sayfası sorunsuz çalışacak.
+            navigate('/BizeKatıl');
+            
+            // Başarılı mesajı artık gerekmiyor, çünkü sayfa zaten yönlenecek
+            // alert("Giriş yapıldı");
 
-    if (loggedIn) {
-        return <BizeKatıl />;
-    }
+        } catch (e) {
+            console.error("Giriş yaparken hata oluştu:", e);
+            setError("Giriş yaparken bir hata oluştu. Lütfen e-posta ve şifrenizi kontrol edin.");
+        }
+    }, [email, password, login, navigate]);
 
+    // Artık `loggedIn` state'ine veya `<BizeKatıl />` bileşenini doğrudan render etmeye gerek yok.
+    // Yönlendirme işlemi React Router tarafından halledilecek.
     return (
         <div style={{
             display: "flex",
@@ -64,14 +75,28 @@ const Giriş = () => {
                         flexDirection: "column",
                         width: "100%"
                     }}>
+                        {error && <p style={{color: 'red', textAlign: 'center'}}>{error}</p>}
+                        
                         <div className="form-group" style={{ marginRight: "10px", width: "60%" }}>
                             <label htmlFor="email">Email</label>
-                            <input type="text" className="form-control" value={email} onChange={(e) => setEmail(e.currentTarget.value)} placeholder="Kullanıcı Adı" />
+                            <input 
+                                type="text" 
+                                className="form-control" 
+                                value={email} 
+                                onChange={(e) => setEmail(e.currentTarget.value)} 
+                                placeholder="E-posta Adresi" 
+                            />
                         </div>
 
                         <div className="form-group" style={{ marginTop: "10px", width: "60%" }}>
-                            <label htmlFor="şifre">Şifre</label>
-                            <input type="password" className="form-control" value={şifre} onChange={(e) => setŞifre(e.currentTarget.value)} placeholder="Şifre" />
+                            <label htmlFor="password">Şifre</label>
+                            <input 
+                                type="password" 
+                                className="form-control" 
+                                value={password} 
+                                onChange={(e) => setPassword(e.currentTarget.value)} 
+                                placeholder="Şifre" 
+                            />
                         </div>
 
                         <div style={{
@@ -82,7 +107,7 @@ const Giriş = () => {
                             textAlign: "center",
                         }}>
                             <button className='btn btn-hover' type='submit'>
-                                GÖNDER
+                                GİRİŞ YAP
                             </button>
                             <Link to="/ForgotPassword" style={{ textDecoration: "none" }}>Şifremi Unuttum</Link>
                             <Link to="/Kayıt" style={{ textDecoration: "none" }}>Hesap Oluştur</Link>

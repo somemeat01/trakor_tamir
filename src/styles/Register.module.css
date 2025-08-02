@@ -1,0 +1,173 @@
+/* Register.module.css */
+
+.registerContainer {
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center;
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem;
+    box-sizing: border-box; /* Padding'in genişliğe dahil olmasını sağlar */
+  }
+  
+  .formWrapper {
+    background-color: rgba(255, 255, 255, 0.95); /* Hafif şeffaf beyaz */
+    border-radius: 1.25rem; /* Daha yuvarlak köşeler */
+    padding: 2.5rem 3rem; /* Daha geniş iç boşluk */
+    width: 100%;
+    max-width: 750px; /* Genişliği biraz artırdık */
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2); /* Daha belirgin gölge */
+    text-align: center; /* Logo ve başlık için ortalama */
+  }
+  
+  .logo {
+    display: block;
+    margin: 0 auto 2rem auto; /* Logo altında daha fazla boşluk */
+    height: 130px; /* Logo boyutunu biraz artırdık */
+    object-fit: contain;
+  }
+  
+  .formTitle {
+    font-size: 2.5rem; /* Başlık boyutunu büyüttük */
+    color: #2c3e50; /* Koyu gri */
+    margin-bottom: 2rem; /* Başlık altında boşluk */
+    font-weight: 700;
+  }
+  
+  .inputGroup {
+    display: flex;
+    gap: 1.5rem; /* Giriş alanları arasındaki boşluğu artırdık */
+    margin-bottom: 1.5rem; /* Gruplar arası boşluk */
+  }
+  
+  .inputField {
+    flex: 1; /* Alanların eşit genişlikte yayılmasını sağlar */
+  }
+  
+  .label {
+    display: block;
+    text-align: left;
+    margin-bottom: 0.6rem;
+    font-size: 1rem;
+    color: #34495e; /* Daha koyu metin rengi */
+    font-weight: 600;
+  }
+  
+  .input {
+    width: 100%;
+    padding: 0.9rem 1.2rem; /* İç boşluğu artırdık */
+    border: 1px solid #dcdcdc; /* Daha açık gri kenarlık */
+    border-radius: 0.6rem; /* Köşeleri yuvarlak */
+    font-size: 1.05rem;
+    color: #333;
+    transition: all 0.3s ease-in-out; /* Geçiş efekti */
+  }
+  
+  .input:focus {
+    outline: none;
+    border-color: #3498db; /* Mavi odak rengi */
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2); /* Hafif odak gölgesi */
+  }
+  
+  .formGroup {
+    margin-bottom: 1.5rem; /* Tekli alanlar arası boşluk */
+  }
+  
+  .checkboxContainer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start; /* Sola hizala */
+    margin-top: 1.5rem;
+    color: #34495e;
+    font-size: 0.95rem;
+  }
+  
+  .checkbox {
+    margin-right: 0.8rem;
+    transform: scale(1.2); /* Checkbox boyutunu büyüt */
+    accent-color: #3498db; /* Checkbox rengini mavi yap */
+  }
+  
+  .buttonContainer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 2.5rem; /* Buton ve link için üst boşluk */
+  }
+  
+  .submitButton {
+    background-color: #27ae60; /* Yeşil buton */
+    color: #ffffff;
+    border: none;
+    border-radius: 0.6rem;
+    padding: 1.1rem 2.5rem; /* Daha büyük buton */
+    font-size: 1.15rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+  }
+  
+  .submitButton:hover {
+    background-color: #219d55; /* Hover'da daha koyu yeşil */
+    transform: translateY(-2px); /* Hafif yukarı kayma */
+  }
+  
+  .loginLink {
+    color: #3498db; /* Mavi link */
+    text-decoration: none;
+    font-size: 1rem;
+    font-weight: 500;
+    transition: color 0.3s ease;
+  }
+  
+  .loginLink:hover {
+    color: #2980b9; /* Hover'da daha koyu mavi */
+    text-decoration: underline;
+  }
+  
+  /* Duyarlı tasarım için medya sorguları */
+  @media (max-width: 768px) {
+    .inputGroup {
+      flex-direction: column; /* Küçük ekranlarda sütun düzenine geç */
+      gap: 1rem;
+    }
+    .formWrapper {
+      padding: 2rem;
+    }
+    .formTitle {
+      font-size: 2rem;
+    }
+    .submitButton {
+      padding: 1rem 2rem;
+      font-size: 1.05rem;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .formWrapper {
+      padding: 1.5rem;
+      border-radius: 1rem;
+    }
+    .logo {
+      height: 100px;
+      margin-bottom: 1.5rem;
+    }
+    .formTitle {
+      font-size: 1.8rem;
+      margin-bottom: 1.5rem;
+    }
+    .input {
+      padding: 0.7rem 1rem;
+      font-size: 0.95rem;
+    }
+    .buttonContainer {
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .loginLink {
+      order: 3; /* Linki en sona al */
+    }
+  }

@@ -1,110 +1,217 @@
-import React, { useEffect, useState } from 'react'
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage"
-import { storage, db } from "../firebase"
-import { useCollectionData } from 'react-firebase-hooks/firestore'
-import { collection } from 'firebase/firestore'
-import { Link } from 'react-router-dom';
+import React, { useEffect, useState, useCallback } from 'react';
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { storage, db } from "../firebase";
+import { useCollection } from 'react-firebase-hooks/firestore';
+import { collection, doc, updateDoc, getDoc } from 'firebase/firestore'; 
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../componen/AuthContext';
 
-const imageRef= ref(storage, "photos/image-name");
-const imageRef1= ref(storage, "photos/image-name1");
-const bilgi = collection(db, "posts");
+// Firestore'daki 'posts' koleksiyonuna referans
+const postsCollectionRef = collection(db, "posts");
 
 const BizeKatıl = () => {
-  const { email } = useAuth();
-  const [data, isLoading] = useCollectionData(bilgi);
-  const [url, setUrl] = useState(null);
-  const [url1, setUrl1] = useState(null);
-  const [filteredData, setFilteredData] = useState([]);
-  const [name, setName] = useState(null);
+  const { currentUser, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const [userData, setUserData] = useState(null);
+  const [profileImageUrl, setProfileImageUrl] = useState(null);
+  const [loadingProfileImage, setLoadingProfileImage] = useState(true);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [error, setError] = useState(null);
   
-  const foto=()=>{filteredData.map((bulundu, index) =>       
-    {setName(bulundu.ad)}   
-  )}
-  
-  const imageRef= ref(storage, `photos/image-${name}`);
-  // Resmin URL'sini almak için
+  // Motor işlemlerini dizi olarak tutmak için state
+  const [yeniIslemText, setYeniIslemText] = useState("");
+  const [motorIslemleriListesi, setMotorIslemleriListesi] = useState([]);
+
+  const [allPostsSnapshot, isPostsLoading] = useCollection(postsCollectionRef);
+  const allPostsData = allPostsSnapshot ? allPostsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) : null;
 
   useEffect(() => {
-    getDownloadURL(imageRef).then((url) => {
-      setUrl(url);
-    }).catch((e) => {
-      console.log(e);
-    });
-  }, []);
+    const fetchUserDataAndImage = async () => {
+      if (currentUser && allPostsData && !userData) {
+        const foundUserPost = allPostsData.find(post => post.email === currentUser.email);
+        if (foundUserPost) {
+          setUserData(foundUserPost);
+          
+          // Motor işlemleri listesini güncelleyeceğiz, eğer varsa
+          if (foundUserPost.motorIslemleri && Array.isArray(foundUserPost.motorIslemleri)) {
+            setMotorIslemleriListesi(foundUserPost.motorIslemleri);
+          }
+          
+          const userPhotoPath = `photos/${currentUser.uid}/traktor_fotografi.jpg`;
+          const userPhotoRef = ref(storage, userPhotoPath);
+          try {
+            const url = await getDownloadURL(userPhotoRef);
+            setProfileImageUrl(url);
+          } catch (e) {
+            setProfileImageUrl(null);
+          }
+        }
+      }
+      setLoadingProfileImage(false);
+    };
+    fetchUserDataAndImage();
+  }, [currentUser, allPostsData, userData]);
 
-  useEffect(() => {
-    getDownloadURL(imageRef1).then((url) => {
-      setUrl1(url);
-    }).catch((e) => {
-      console.log(e);
-    });
-  }, []);
-
-  // Filtreleme işlemini yapmak için
-  useEffect(() => {
-    if (data) {
-      const filtered = data.filter((bulundu) => bulundu.email === email);
-      setFilteredData(filtered);
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file || !currentUser) {
+      setError("Lütfen bir dosya seçin veya oturum açtığınızdan emin olun.");
+      return;
     }
-  }, [data, email]);
+    setUploadingImage(true);
+    setError(null);
+    const imagePath = `photos/${currentUser.uid}/traktor_fotografi.jpg`;
+    const imageRef = ref(storage, imagePath);
+    try {
+      await uploadBytes(imageRef, file);
+      const url = await getDownloadURL(imageRef);
+      setProfileImageUrl(url);
+      alert("Traktör fotoğrafı başarıyla yüklendi!");
+    } catch (e) {
+      console.error("Resim yüklenirken hata oluştu:", e);
+      setError("Resim yüklenirken bir hata oluştu: " + e.message);
+    } finally {
+      setUploadingImage(false);
+    }
+  };
 
-  
+  const handleSaveMotorIslemleri = useCallback(async () => {
+    if (!currentUser || !userData || !userData.id || !yeniIslemText.trim()) {
+      setError("Lütfen bir motor işlemi yazın ve oturum açtığınızdan emin olun.");
+      return;
+    }
+    try {
+      const userDocRef = doc(db, "posts", userData.id);
+      
+      const docSnap = await getDoc(userDocRef);
+      const mevcutIslemler = docSnap.exists() && Array.isArray(docSnap.data().motorIslemleri)
+        ? docSnap.data().motorIslemleri
+        : [];
+      
+      const yeniIslemObjesi = {
+        islem: yeniIslemText,
+        tarih: new Date()
+      };
 
+      const yeniIslemlerListesi = [...mevcutIslemler, yeniIslemObjesi];
 
-  if (isLoading) {
-    return <h1>loading...</h1>;
+      await updateDoc(userDocRef, {
+        motorIslemleri: yeniIslemlerListesi
+      });
+      
+      setMotorIslemleriListesi(yeniIslemlerListesi); 
+      setYeniIslemText(""); 
+      alert("Motor işlemi başarıyla kaydedildi!");
+
+    } catch (e) {
+      console.error("Motor işlemleri kaydedilirken hata oluştu:", e);
+      setError("Motor işlemleri kaydedilirken bir hata oluştu: " + e.message);
+    }
+  }, [currentUser, userData, yeniIslemText]);
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/');
+    } catch (error) {
+      console.error("Çıkış yaparken hata oluştu:", error.message);
+      setError("Çıkış yaparken bir hata oluştu: " + error.message);
+    }
+  };
+
+  if (isPostsLoading || loadingProfileImage || !currentUser) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', fontSize: '1.5rem', color: '#333' }}>
+        Yükleniyor...
+      </div>
+    );
+  }
+
+  if (!userData) {
+    return (
+      <div style={{ padding: '2rem', textAlign: 'center', fontSize: '1.2rem', color: '#555' }}>
+        <p>Profil bilgileriniz bulunamadı. Lütfen önce kayıt olduğunuzdan emin olun.</p>
+        <Link to="/Kayıt" style={{ color: '#007bff', textDecoration: 'none' }}>Kayıt Ol</Link>
+      </div>
+    );
   }
 
   return (
-    <div>
-      <div style={{
-        display: "flex",
-        flexDirection: "row",
-        justifyContent:"space-between",}}>
-      <div style={{
-        display: "flex",
-        border: "solid",
-        marginTop: "2rem",
-        marginLeft: "2rem",
-        flexDirection: "column",
-        padding: "1.3rem"
-      }}>
-        {url && <img src={url} alt="" style={{ width: "10rem", height: "10rem", borderRadius: "50%" }} />}
-        <input type="file" accept="image/*" onChange={(e) => {
-          const file = e.currentTarget.files[0];
-          foto();
-          uploadBytes(imageRef, file).then(() => {
-            // Resim yüklendikten sonra yapılacak işlemler
-          });
-        }} />
-
+    <div style={{ fontFamily: 'Arial, sans-serif', padding: '2rem', backgroundColor: '#f5f5f5', maxWidth: '900px', margin: '2rem auto', borderRadius: '10px', boxShadow: '0 8px 30px rgba(0,0,0,0.1)' }}>
+      <h1 style={{ textAlign: 'center', color: '#333', marginBottom: '2rem' }}>Profilim</h1>
+      {error && <p style={{ color: '#e74c3c', textAlign: 'center', marginBottom: '1rem', fontWeight: 'bold' }}>{error}</p>}
+      <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap', justifyContent: 'center' }}>
+        <div style={{ flex: '0 0 auto', width: '250px', minHeight: '250px', border: '1px solid #ddd', borderRadius: '10px', padding: '1rem', backgroundColor: '#fff', boxShadow: '0 4px 15px rgba(0,0,0,0.1)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1rem' }}>
+          <h3 style={{ color: '#555', marginBottom: '0.5rem' }}>Traktör Fotoğrafı</h3>
+          {profileImageUrl ? (
+            <img src={profileImageUrl} alt="Traktör Fotoğrafı" style={{ width: "200px", height: "200px", objectFit: 'cover', borderRadius: "5%" }} />
+          ) : (
+            <div style={{ width: "200px", height: "200px", border: '2px dashed #ccc', display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#888', borderRadius: "5%" }}>
+              Fotoğraf Yok
+            </div>
+          )}
+          <input type="file" accept="image/*" onChange={handleImageUpload} disabled={uploadingImage} style={{ marginTop: '1rem' }} />
+          {uploadingImage && <p style={{ color: '#28a745' }}>Yükleniyor...</p>}
+        </div>
+        <div style={{ flex: '1 1 300px', border: '1px solid #ddd', borderRadius: '10px', padding: '1.5rem', backgroundColor: '#fff', boxShadow: '0 4px 15px rgba(0,0,0,0.1)' }}>
+          <h3 style={{ color: '#555', marginBottom: '1.5rem', borderBottom: '1px solid #eee', paddingBottom: '1rem' }}>Kişisel Bilgiler</h3>
+          <p><strong>Ad:</strong> {userData.ad}</p>
+          <p><strong>Soyad:</strong> {userData.soyad}</p>
+          <p><strong>Email:</strong> {userData.email}</p>
+          <p><strong>Telefon:</strong> {userData.telefon}</p>
+          <p><strong>İl:</strong> {userData.il || '-'}</p>
+          <p><strong>İlçe:</strong> {userData.ilçe || '-'}</p>
+          <p><strong>Mahalle:</strong> {userData.mahalle || '-'}</p>
+          <p><strong>Traktör Türü:</strong> {userData.traktorTuru || '-'}</p>
+        </div>
+        <div style={{ flex: '1 1 100%', border: '1px solid #ddd', borderRadius: '10px', padding: '1.5rem', backgroundColor: '#fff', boxShadow: '0 4px 15px rgba(0,0,0,0.1)', marginTop: '2rem' }}>
+          <h3 style={{ color: '#555', marginBottom: '1.5rem', borderBottom: '1px solid #eee', paddingBottom: '1rem' }}>Yeni Motor İşlemi</h3>
+          <textarea
+            placeholder="Motorunuza yapılan yeni işlemi buraya yazın..."
+            value={yeniIslemText}
+            onChange={(e) => setYeniIslemText(e.target.value)}
+            style={{ width: '100%', minHeight: '150px', padding: '10px', border: '1px solid #ccc', borderRadius: '5px', resize: 'vertical', fontSize: '1rem' }}
+          ></textarea>
+          <button onClick={handleSaveMotorIslemleri} style={{ marginTop: '1rem', padding: '10px 20px', backgroundColor: '#007bff', color: '#fff', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>
+            İşlemi Kaydet
+          </button>
+        </div>
       </div>
-      <div style={{
-        display: "flex",
-        flexDirection: "column",
-        marginTop: "2rem",
-        marginLeft: "2rem",
-        border: "solid",
-        marginRight: "78%",
-        padding: "1.3rem"
-      }}>
-      {url1 && <img src={url1} alt="" style={{ width: "10rem", height: "10rem", borderRadius: "50%" }} />}
-        <input type="file" accept="image/*" onChange={(e) => {
-          const file1 = e.currentTarget.files[0];
-          uploadBytes(imageRef1, file1).then(() => {
-            // Resim yüklendikten sonra yapılacak işlemler
-          });
-        }} />
+      <div style={{ textAlign: 'center', marginTop: '3rem', display: 'flex', justifyContent: 'center', gap: '1rem' }}>
+        <button
+          onClick={() => navigate('/Tamir')}
+          style={{
+            padding: '10px 20px',
+            backgroundColor: '#28a745',
+            color: '#fff',
+            border: 'none',
+            borderRadius: '5px',
+            cursor: 'pointer',
+            fontSize: '1.1rem',
+            fontWeight: 'bold'
+          }}
+        >
+          İşlemlere Bak
+        </button>
+        <button
+          onClick={handleLogout}
+          style={{
+            padding: '10px 20px',
+            backgroundColor: '#dc3545',
+            color: '#fff',
+            border: 'none',
+            borderRadius: '5px',
+            cursor: 'pointer',
+            fontSize: '1.1rem',
+            fontWeight: 'bold'
+          }}
+        >
+          Çıkış Yap
+        </button>
       </div>
-      </div>
-
-  
-
-     
-      <Link to="/">çıkış</Link>
     </div>
   );
-}
+};
 
 export default BizeKatıl;
