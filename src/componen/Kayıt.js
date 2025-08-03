@@ -2,32 +2,26 @@
 import React, { useState, useCallback } from 'react';
 import kayıt from '../resim/kayıt.jpg'; // Resim yolu doğru olmalı
 import logo from '../resim/Likya.png'; // Logo yolu doğru olmalı
-import { updateProfile } from 'firebase/auth'; // Sadece updateProfile kaldı, createUserWithEmailAndPassword artık useAuth'ta
-import { db } from '../firebase'; // Firebase config dosyanızdan import
-import { addDoc, collection } from 'firebase/firestore';
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { auth, db } from '../firebase'; // Firebase config dosyanızdan import
+import { doc, setDoc } from 'firebase/firestore'; // setDoc ve doc eklendi, addDoc kaldırıldı
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../componen/AuthContext'; // useAuth hook'unu import ettik
 
 // CSS Modülü import edildi
 import styles from '../styles/Register.module.css';
 
-// Firestore koleksiyon referansı
-const usersCollectionRef = collection(db, "posts");
-
 const Kayıt = () => {
   const navigate = useNavigate();
-  const { signup } = useAuth(); // useAuth hook'undan signup fonksiyonunu aldık
 
   const [ad, setAd] = useState("");
   const [soyad, setSoyad] = useState("");
   const [il, setİl] = useState("");
   const [ilçe, setİlçe] = useState("");
   const [mahalle, setMahalle] = useState("");
-  const [tür, setTür] = useState(""); // Traktör türü gibi bir bilgi
+  const [tür, setTür] = useState("");
   const [tel, setTel] = useState("");
   const [email, setEmail] = useState("");
   const [şifre, setŞifre] = useState("");
-
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -43,16 +37,17 @@ const Kayıt = () => {
     }
 
     try {
-      // 1. AuthContext'ten gelen signup fonksiyonunu kullanarak kullanıcı oluştur
-      const userCredential = await signup(email, şifre);
+      // 1. Firebase Authentication ile kullanıcı oluştur
+      const userCredential = await createUserWithEmailAndPassword(auth, email, şifre);
       const user = userCredential.user;
 
-      // 2. Kullanıcının görünen adını güncelle (bu adım aynı kalıyor)
+      // 2. Kullanıcının görünen adını güncelle
       await updateProfile(user, { displayName: `${ad} ${soyad}` });
 
-      // 3. Firestore'a ek bilgileri kaydet (bu adım da aynı kalıyor)
-      await addDoc(usersCollectionRef, {
-        uid: user.uid,
+      // 3. Firestore'a ek bilgileri kaydet
+      // addDoc yerine setDoc kullanarak belgenin ID'sini kullanıcının UID'si olarak belirliyoruz.
+      const userDocRef = doc(db, "posts", user.uid);
+      await setDoc(userDocRef, {
         ad: ad,
         soyad: soyad,
         il: il,
@@ -90,7 +85,7 @@ const Kayıt = () => {
     } finally {
       setLoading(false);
     }
-  }, [ad, soyad, il, ilçe, mahalle, tür, tel, email, şifre, navigate, signup]); // signup'ı dependency olarak ekledik
+  }, [ad, soyad, il, ilçe, mahalle, tür, tel, email, şifre, navigate]);
 
   return (
     <div className={styles.registerContainer} style={{ backgroundImage: `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url(${kayıt})` }}>

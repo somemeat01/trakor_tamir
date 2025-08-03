@@ -1,13 +1,9 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { storage, db } from "../firebase";
-import { useCollection } from 'react-firebase-hooks/firestore';
-import { collection, doc, updateDoc, getDoc } from 'firebase/firestore'; 
+import { doc, updateDoc, getDoc } from 'firebase/firestore'; 
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../componen/AuthContext';
-
-// Firestore'daki 'posts' koleksiyonuna referans
-const postsCollectionRef = collection(db, "posts");
 
 const BizeKatıl = () => {
   const { currentUser, logout } = useAuth();
@@ -19,24 +15,25 @@ const BizeKatıl = () => {
   const [uploadingImage, setUploadingImage] = useState(false);
   const [error, setError] = useState(null);
   
-  // Motor işlemlerini dizi olarak tutmak için state
   const [yeniIslemText, setYeniIslemText] = useState("");
-  const [motorIslemleriListesi, setMotorIslemleriListesi] = useState([]);
-
-  const [allPostsSnapshot, isPostsLoading] = useCollection(postsCollectionRef);
-  const allPostsData = allPostsSnapshot ? allPostsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) : null;
 
   useEffect(() => {
-    const fetchUserDataAndImage = async () => {
-      if (currentUser && allPostsData && !userData) {
-        const foundUserPost = allPostsData.find(post => post.email === currentUser.email);
-        if (foundUserPost) {
-          setUserData(foundUserPost);
-          
-          // Motor işlemleri listesini güncelleyeceğiz, eğer varsa
-          if (foundUserPost.motorIslemleri && Array.isArray(foundUserPost.motorIslemleri)) {
-            setMotorIslemleriListesi(foundUserPost.motorIslemleri);
-          }
+    const fetchUserData = async () => {
+      if (!currentUser) {
+        setLoadingProfileImage(false);
+        return;
+      }
+
+      setLoadingProfileImage(true);
+      setError(null);
+      
+      try {
+        const userDocRef = doc(db, "posts", currentUser.uid);
+        const docSnap = await getDoc(userDocRef);
+
+        if (docSnap.exists()) {
+          const userDataFromDB = docSnap.data();
+          setUserData(userDataFromDB);
           
           const userPhotoPath = `photos/${currentUser.uid}/traktor_fotografi.jpg`;
           const userPhotoRef = ref(storage, userPhotoPath);
@@ -46,12 +43,19 @@ const BizeKatıl = () => {
           } catch (e) {
             setProfileImageUrl(null);
           }
+        } else {
+          setUserData(null);
         }
+      } catch (e) {
+        console.error("Kullanıcı verisi çekilirken hata oluştu:", e);
+        setError("Profil verileri yüklenirken bir hata oluştu.");
+      } finally {
+        setLoadingProfileImage(false);
       }
-      setLoadingProfileImage(false);
     };
-    fetchUserDataAndImage();
-  }, [currentUser, allPostsData, userData]);
+
+    fetchUserData();
+  }, [currentUser]);
 
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
@@ -77,12 +81,12 @@ const BizeKatıl = () => {
   };
 
   const handleSaveMotorIslemleri = useCallback(async () => {
-    if (!currentUser || !userData || !userData.id || !yeniIslemText.trim()) {
+    if (!currentUser || !userData || !yeniIslemText.trim()) {
       setError("Lütfen bir motor işlemi yazın ve oturum açtığınızdan emin olun.");
       return;
     }
     try {
-      const userDocRef = doc(db, "posts", userData.id);
+      const userDocRef = doc(db, "posts", currentUser.uid);
       
       const docSnap = await getDoc(userDocRef);
       const mevcutIslemler = docSnap.exists() && Array.isArray(docSnap.data().motorIslemleri)
@@ -91,7 +95,7 @@ const BizeKatıl = () => {
       
       const yeniIslemObjesi = {
         islem: yeniIslemText,
-        tarih: new Date()
+        tarih: new Date().toISOString()
       };
 
       const yeniIslemlerListesi = [...mevcutIslemler, yeniIslemObjesi];
@@ -100,7 +104,6 @@ const BizeKatıl = () => {
         motorIslemleri: yeniIslemlerListesi
       });
       
-      setMotorIslemleriListesi(yeniIslemlerListesi); 
       setYeniIslemText(""); 
       alert("Motor işlemi başarıyla kaydedildi!");
 
@@ -120,7 +123,7 @@ const BizeKatıl = () => {
     }
   };
 
-  if (isPostsLoading || loadingProfileImage || !currentUser) {
+  if (loadingProfileImage || !currentUser) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', fontSize: '1.5rem', color: '#333' }}>
         Yükleniyor...
@@ -131,7 +134,7 @@ const BizeKatıl = () => {
   if (!userData) {
     return (
       <div style={{ padding: '2rem', textAlign: 'center', fontSize: '1.2rem', color: '#555' }}>
-        <p>Profil bilgileriniz bulunamadı. Lütfen önce kayıt olduğunuzdan emin olun.</p>
+        <p>{error || "Profil bilgileriniz bulunamadı. Lütfen önce kayıt olduğunuzdan emin olun."}</p>
         <Link to="/Kayıt" style={{ color: '#007bff', textDecoration: 'none' }}>Kayıt Ol</Link>
       </div>
     );
@@ -166,7 +169,7 @@ const BizeKatıl = () => {
           <p><strong>Traktör Türü:</strong> {userData.traktorTuru || '-'}</p>
         </div>
         <div style={{ flex: '1 1 100%', border: '1px solid #ddd', borderRadius: '10px', padding: '1.5rem', backgroundColor: '#fff', boxShadow: '0 4px 15px rgba(0,0,0,0.1)', marginTop: '2rem' }}>
-          <h3 style={{ color: '#555', marginBottom: '1.5rem', borderBottom: '1px solid #eee', paddingBottom: '1rem' }}>Yeni Motor İşlemi</h3>
+          <h3 style={{ color: '#555', marginBottom: '1.5rem', borderBottom: '1px solid #eee', paddingBottom: '1rem' }}>Motor İşlemi Ekle</h3>
           <textarea
             placeholder="Motorunuza yapılan yeni işlemi buraya yazın..."
             value={yeniIslemText}
@@ -192,7 +195,7 @@ const BizeKatıl = () => {
             fontWeight: 'bold'
           }}
         >
-          İşlemlere Bak
+          Tüm İşlemleri Görüntüle
         </button>
         <button
           onClick={handleLogout}

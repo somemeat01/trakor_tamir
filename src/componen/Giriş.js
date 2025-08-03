@@ -5,24 +5,16 @@ import bag from "../resim/bağ.jpg";
 import "../App.css";
 
 const Giriş = () => {
-    // navigate hook'u ile yönlendirme yapacağız
     const navigate = useNavigate();
-
-    // useAuth hook'undan login fonksiyonunu alıyoruz.
-    // Artık global email state'i yönetmeye gerek yok, çünkü AuthContext Firebase'den gelen kullanıcıyı otomatik olarak dinleyecek.
     const { login } = useAuth();
-
-    // Lokal state'lerimizi koruyoruz
     const [email, setEmail] = useState("");
-    const [password, setPassword] = useState(""); // Şifre için ş harfi olmadan 'password' kullanmak daha yaygındır
-    
-    // Hata mesajı için bir state ekleyebiliriz
+    const [password, setPassword] = useState("");
     const [error, setError] = useState(null);
 
     const handleSubmit = useCallback(async (e) => {
         e.preventDefault();
         
-        setError(null); // Önceki hataları temizle
+        setError(null);
 
         if (!email || !password) {
             alert("Lütfen tüm alanları doldurun");
@@ -30,15 +22,11 @@ const Giriş = () => {
         }
 
         try {
-            // useAuth'tan gelen login fonksiyonunu çağırıyoruz
             await login(email, password);
             
-            // Giriş başarılı olursa, /BizeKatıl sayfasına yönlendiriyoruz
-            // AuthContext.js artık currentUser'ı otomatik olarak güncellediği için BizeKatıl sayfası sorunsuz çalışacak.
+            // Başarılı giriş sonrası bir mesaj gösterip ardından yönlendirme yapabiliriz
+            alert("Giriş yapıldı!");
             navigate('/BizeKatıl');
-            
-            // Başarılı mesajı artık gerekmiyor, çünkü sayfa zaten yönlenecek
-            // alert("Giriş yapıldı");
 
         } catch (e) {
             console.error("Giriş yaparken hata oluştu:", e);
@@ -46,8 +34,6 @@ const Giriş = () => {
         }
     }, [email, password, login, navigate]);
 
-    // Artık `loggedIn` state'ine veya `<BizeKatıl />` bileşenini doğrudan render etmeye gerek yok.
-    // Yönlendirme işlemi React Router tarafından halledilecek.
     return (
         <div style={{
             display: "flex",

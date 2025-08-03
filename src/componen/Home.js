@@ -1,141 +1,63 @@
 import React from 'react';
-import { useCollection } from 'react-firebase-hooks/firestore';
-import { collection, query, where } from 'firebase/firestore';
-import { db } from '../firebase';
-import { useAuth } from '../componen/AuthContext';
-import { Link } from 'react-router-dom';
-import bag from '../resim/bağ.jpg'; // Resim yolunu kullanıyoruz
-import "../App.css";
-
-// Firestore'daki 'posts' koleksiyonuna referans
-const postsCollectionRef = collection(db, "posts");
+import { useNavigate } from 'react-router-dom';
+import { Tractor, Wrench } from 'lucide-react';
+import arkaPlan from "../resim/ko.jpg";
 
 const Home = () => {
-    // AuthContext'ten oturum açmış kullanıcıyı al
-    const { currentUser } = useAuth();
-    
-    // Sadece oturum açmış kullanıcıya ait postları filtrelemek için sorgu oluştur
-    // Bu sorgu, kullanıcının email'ine göre filtreleme yapar.
-    // En iyi uygulama için uid kullanmak daha güvenlidir. (request.auth.uid == resource.data.uid)
-    const userPostsQuery = currentUser ? query(postsCollectionRef, where("email", "==", currentUser.email)) : null;
+  const navigate = useNavigate();
 
-    const [userPostsSnapshot, isUserPostsLoading] = useCollection(userPostsQuery);
-
-    const userPostData = userPostsSnapshot ? userPostsSnapshot.docs[0] : null;
-
-    // Yükleme durumu
-    if (isUserPostsLoading) {
-        return (
-            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', fontSize: '1.5rem', color: '#333' }}>
-                Veriler yükleniyor...
-            </div>
-        );
-    }
-    
-    // Eğer kullanıcı oturum açmamışsa bir mesaj göster
-    if (!currentUser) {
-      return (
-        <div style={{
-            backgroundImage: `url(${bag})`,
-            backgroundAttachment: 'fixed',
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            minHeight: '100vh',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            flexDirection: 'column',
-            gap: '1rem',
-            color: '#fff',
-            textShadow: '2px 2px 4px rgba(0,0,0,0.5)',
-            fontSize: '1.2rem',
-            textAlign: 'center'
-        }}>
-            <p>Bu sayfayı görebilmek için lütfen giriş yapın veya kayıt olun.</p>
-            <Link to="/Giriş" className="btn btn-hover">Giriş Yap</Link>
-        </div>
-      );
-    }
-
-    // Eğer kullanıcının motor işlemi yoksa bir mesaj göster
-    if (!userPostData || !userPostData.data().motorIslemleri) {
-      return (
-          <div style={{
-              backgroundImage: `url(${bag})`,
-              backgroundAttachment: 'fixed',
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-              minHeight: '100vh',
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              flexDirection: 'column',
-              color: '#fff',
-              textShadow: '2px 2px 4px rgba(0,0,0,0.5)',
-              fontSize: '1.2rem',
-              textAlign: 'center'
-          }}>
-              <p>Henüz motor işlemi paylaşmamışsınız. Profil sayfanızdan ekleme yapabilirsiniz.</p>
-              <Link to="/BizeKatıl" className="btn btn-hover">Profilime Git</Link>
-          </div>
-      );
-    }
-
-    const post = userPostData.data();
-
-    return (
-        <div style={{
-            backgroundImage: `url(${bag})`,
-            backgroundAttachment: 'fixed',
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            minHeight: '100vh',
-            padding: '2rem'
-        }}>
-            <h1 style={{
-                textAlign: 'center',
-                color: '#fff',
-                textShadow: '2px 2px 4px rgba(0,0,0,0.5)',
-                marginBottom: '2rem',
-                fontSize: '2.5rem'
-            }}>
-                Hoş Geldiniz, {post.ad}!
+  return (
+    // Arka plan resmi ve gradyan efektini sayfanın tamamına uyguluyoruz
+    <div 
+      className="min-h-screen font-sans flex flex-col"
+      style={{
+        backgroundImage: `linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.1)), url(${arkaPlan})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+        backgroundAttachment: 'fixed', // Sayfa kaydığında arka planı sabit tutar
+      }}
+    >
+      
+      {/* Hero Section */}
+      <section 
+        className="h-[90vh] flex items-center justify-center text-center p-4 relative"
+      >
+        <div className="relative z-10 text-white max-w-3xl">
+          <div className="flex items-center justify-center mb-6">
+            <Tractor size={64} className="text-yellow-400 mr-4" />
+            <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight leading-tight">
+              Deutz Tamir ve Bakım Servisi
             </h1>
-            <div style={{
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                flexDirection: 'column',
-                maxWidth: '600px',
-                margin: 'auto'
-            }}>
-                <div style={{
-                    backgroundColor: 'rgba(255,255,255,0.9)',
-                    padding: '1.5rem',
-                    borderRadius: '10px',
-                    boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
-                    width: '100%',
-                    borderLeft: '5px solid #28a745'
-                }}>
-                    <h3 style={{ color: '#007bff', borderBottom: '1px solid #ddd', paddingBottom: '0.5rem' }}>
-                        Motor İşlemleriniz
-                    </h3>
-                    <div style={{
-                        backgroundColor: '#f9f9f9',
-                        padding: '1rem',
-                        borderRadius: '5px',
-                        border: '1px solid #eee',
-                        marginTop: '1rem'
-                    }}>
-                        <p>{post.motorIslemleri}</p>
-                    </div>
-                    <small style={{ color: '#555', marginTop: '1rem', display: 'block', textAlign: 'right' }}>
-                        Son Güncelleme: {post.sonGuncellemeTarihi ? new Date(post.sonGuncellemeTarihi.seconds * 1000).toLocaleString() : '-'}
-                    </small>
-                </div>
-            </div>
+          </div>
+          <p className="text-lg md:text-xl font-light mt-4 mb-8">
+            Traktörünüzü uzman ellere bırakın. Yüksek performans, güvenli ve uzun ömürlü çözümlerle yanınızdayız.
+          </p>
         </div>
-    );
+      </section>
+
+      {/* Services Callout Section */}
+      <section className="bg-white bg-opacity-90 py-16 px-4">
+        <div className="container mx-auto max-w-6xl text-center">
+          <h2 className="text-3xl font-bold text-gray-800 mb-4">Uzman Hizmetler</h2>
+          <p className="text-gray-600 max-w-xl mx-auto mb-10">
+            Deutz traktörleriniz için motor tamiri, periyodik bakım ve arıza tespiti gibi profesyonel hizmetler sunuyoruz.
+          </p>
+          <button
+            onClick={() => {
+              navigate('/Giriş');
+            }}
+            className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transition duration-300 transform hover:scale-105 flex items-center justify-center mx-auto"
+          >
+            <Wrench size={20} className="mr-2" />
+            Hizmetlerimiz Hakkında Daha Fazla Bilgi
+          </button>
+        </div>
+      </section>
+
+      {/* Footer is part of the parent component, but included for context */}
+    </div>
+  );
 };
 
 export default Home;
